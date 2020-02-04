@@ -36,6 +36,12 @@ class RpacServiceProvider extends ServiceProvider
         );
 
         $this->bootMiddleware();
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                Console\Commands\RpacCommand::class,
+            ]);
+        }
     }
 
     private function bootMiddleware()
