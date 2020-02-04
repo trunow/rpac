@@ -89,7 +89,18 @@ class UserController extends Controller
             $data['password'] = bcrypt($password);
         }
 
-        if(count($data)) $user->update($data);
+        $api_token = null;
+        if(isset($data['api_token'])) {
+            $api_token = $data['api_token'];
+            unset($data['updated_at']);
+        }
+        if(count($data)) {
+            $user->update($data);
+            if($api_token) {
+                $user->api_token = $api_token;
+                $user->save();
+            }
+        }
         if(count($roles)) $user->roles()->sync($roles);
 
         return $this->show($user);
