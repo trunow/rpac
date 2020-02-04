@@ -20,7 +20,7 @@ class UserController extends Controller
         return User::with('roles')
 //                    ->abonents($request->has('abonents'))
 //                    ->search($request->input('q'))
-                    ->paginate($request->paginate ?? config('rest.paginate'));
+                    ->paginate($request->paginate ?: config('rest.paginate') ?: 50);
     }
 
     /**
