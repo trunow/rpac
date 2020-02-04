@@ -1,0 +1,21 @@
+{
+    "name": "trunow/rpac",
+    "description": "Roles/Permissions Access Control (Rpac) Laravel package",
+    "keywords": ["roles", "permissions", "rpac", "rbac", "acl", "auth", "laravel", "illuminate"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Slava Trunow",
+            "email": "s@trnw.ru"
+        }
+    ],
+    "require": {
+        "php": ">=7.2.0",
+        "illuminate/support": "^6.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Trunow\\Rpac\\": "src"
+        }
+    }
+}

@@ -1,0 +1,11 @@
+/* theme color */
+$--color-primary: cornflowerblue;
+
+/* icon font path, required */
+$--font-path: '~element-ui/lib/theme-chalk/fonts';
+
+body {
+  font-family: Arial;
+}
+
+@import "~element-ui/packages/theme-chalk/src/index";
