@@ -17,4 +17,3 @@ mix.webpackConfig({
     },
 });
 mix.js('resources/js/rpac.js', 'public/vendor/rpac');
-mix.sass('resources/sass/rpac.scss', 'public/vendor/rpac');

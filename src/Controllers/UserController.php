@@ -18,8 +18,8 @@ class UserController extends Controller
     public function index(Request $request)
     {
         return User::with('roles')
-                    ->abonents($request->has('abonents'))
-                    ->search($request->input('q'))
+//                    ->abonents($request->has('abonents'))
+//                    ->search($request->input('q'))
                     ->paginate($request->paginate ?? config('rest.paginate'));
     }
 
@@ -125,7 +125,8 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        $user->delete();//$user->roles()->detach();//???//$user->forceDelete();//
+        $user->roles()->detach();
+        $user->delete();////???//$user->forceDelete();//
         return $user->deleted_at;
     }
 }

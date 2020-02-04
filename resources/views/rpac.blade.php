@@ -15,7 +15,7 @@
     <script src="{{ asset('vendor/rpac/rpac.js') }}" defer></script>
 
     <!-- Styles -->
-    <link href="{{ asset('vendor/rpac/rpac.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
 </head>
 <body>
 <div id="rpac"></div>
