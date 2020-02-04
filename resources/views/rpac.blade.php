@@ -13,13 +13,13 @@
 
     <!-- Scripts -->
     <script src="{{ asset('vendor/rpac/rpac.js') }}" defer></script>
-    <style>
+
+    <!-- Styles -->
+    <style type="text/css">
         body {
             font-family: Arial;
         }
     </style>
-
-    <!-- Styles -->
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
 </head>
 <body>
