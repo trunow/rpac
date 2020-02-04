@@ -348,7 +348,7 @@
 
             getModels() {
                 this.$http
-                    .get('/wfac/access?model&abilities')
+                    .get('/rpac/access?model&abilities')
                     .then(r => {
                         this.models = r.data;
                     })
