@@ -51,8 +51,7 @@ Add the package to your application service providers in `config/app.php` file.
 
 Publish the package config file and migrations to your application. Run these commands inside your terminal.
 
-    php artisan vendor:publish --provider="Trunow\Rpac\RpacServiceProvider" --tag=config
-    php artisan vendor:publish --provider="Trunow\Rpac\RpacServiceProvider" --tag=migrations
+    php artisan vendor:publish --provider="Trunow\Rpac\RpacServiceProvider"
 
 And also run migrations.
 
@@ -60,7 +59,7 @@ And also run migrations.
 
 > This uses the default users table which is in Laravel. You should already have the migration file for the users table available and migrated.
 
-### Rpacable Trait
+### Rpacable Trait and $with = [roles]
 
 Include `Rpacable` trait inside your `User` model.
 
@@ -72,9 +71,32 @@ class User extends Model implements AuthenticatableContract
     use Authenticatable, Rpacable;
 ```
 
-And that's it!
+And set protected property $with = ['roles'] (for autoloading roles with User's model).
+
+    protected $with = ['roles'];
+    
+### Create Su/Admin User
+
+Run command, example `rpac su:1` or `rpac admin:email@example.com` or `role:user@example.com:pa$$w0r5` .
+
+    php artisan rpac su:slava@trunov.me
+
+> (:
+>
+> And go to `your-domain.com/admin-rpac`
+>
+> :)
+
 
 ## Usage
+
+### Creating Policy
+
+TODO
+
+
+
+
 
 ### Creating Roles
 
