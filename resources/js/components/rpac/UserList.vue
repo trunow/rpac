@@ -55,17 +55,6 @@
                         label="Имя"
                         sortable
                         width="200">
-                    <template slot="header" slot-scope="scope">
-                        <span v-if="searchingColumn===scope.column" class="search-column-wrap" @click.stop.prevent>
-                            <el-input
-                                    v-model="search"
-                                    size="mini"
-                                    @focus.stop.prevent
-                                    :placeholder="scope.column.label"/>
-                        </span>
-                        <span v-else>{{ scope.column.label }}</span>
-                        <el-button type="text" :icon="searchingColumn===scope.column?'el-icon-close':'el-icon-search'" @click.stop.prevent="searchByColumn(scope.column)"></el-button>
-                    </template>
                     <template slot-scope="scope">
                         <el-input
                                 v-if="edit === scope.row.id"
@@ -80,17 +69,6 @@
                         label="Email"
                         sortable
                         width="200">
-                    <template slot="header" slot-scope="scope">
-                        <span v-if="searchingColumn===scope.column" class="search-column-wrap" @click.stop.prevent>
-                            <el-input
-                                    v-model="search"
-                                    size="mini"
-                                    @focus.stop.prevent
-                                    :placeholder="scope.column.label"/>
-                        </span>
-                        <span v-else>{{ scope.column.label }}</span>
-                        <el-button type="text" :icon="searchingColumn===scope.column?'el-icon-close':'el-icon-search'" @click.stop.prevent="searchByColumn(scope.column)"></el-button>
-                    </template>
                     <template slot-scope="scope">
                         <el-input
                                 v-if="edit === scope.row.id"
@@ -132,19 +110,22 @@
                     </template>
                 </el-table-column>
                 <el-table-column
-                        label="JSON"
-                        width="800">
+                        prop="api_token"
+                        label="API токен"
+                        width="400">
                     <template slot-scope="scope">
-                        <small :class="{ 'no-wrap': edit !== scope.row.id }">{{ JSON.stringify(scope.row) }}</small>
+                        <el-input
+                                v-if="edit === scope.row.id"
+                                v-model="scope.row.api_token"
+                                :placeholder="scope.column.label"
+                        ></el-input>
+                        <code v-else>{{ scope.row.api_token }}</code>
                     </template>
                 </el-table-column>
                 <el-table-column
                         fixed="right"
                         :width="searchWidth"
                         align="right">
-                    <template slot="header" slot-scope="scope">
-                        #
-                    </template>
                     <template slot-scope="scope">
                         <el-button-group v-if="edit === scope.row.id">
                             <el-button type="primary" size="small" icon="el-icon-check" plain @click="updateUser"></el-button>
@@ -239,7 +220,6 @@
                 this.$http
                     .post('/rpac/users', Object.assign({'_method': 'POST'}, this.form))
                     .then(r => {
-                        //console.log(r.data);
                         this.create = false;
                         this.form = {};
                         this.table.push(r.data);// TODO this.loadRows();
@@ -247,21 +227,17 @@
                     .catch(e => console.error(e));
             },
             updateUser() {
-                //console.warn('updateUser', this.edit, this.editableUser);
                 this.$http
                     .post('/rpac/users/' + this.edit, Object.assign({'_method': 'PUT'}, this.editableUser))
                     .then(r => {
-                        console.log(r.data);
                         this.edit = null;
                     })
                     .catch(e => console.error(e));
             },
             deleteUser(userId) {
-                //console.warn('deleteUser', userId);
                 this.$http
                     .post('/rpac/users/' + userId, Object.assign({'_method': 'DELETE'}, {})) // TODO add request in UserController->destroy
                     .then(r => {
-                        console.log(r.data);
                         this.table.find(r => r.id===userId).deleted_at = r.data; // TODO 2000-00-00 00:00:00
                     })
                     .catch(e => console.error(e));
@@ -272,13 +248,9 @@
                 this.$http
                     .get('/rpac/users?page=' + (++this.page))
                     .then(r => {
-                        //console.warn(r.data);
                         return r.data;
                     })
                     .then(d => {
-
-                        //console.log('loadRows >>>', d, this.page);
-
                         if(d.total && d.to) {
                             if(d.current_page === d.last_page) {
                                 this.noMore = true;
@@ -286,27 +258,13 @@
 
                             if(d.current_page === this.page) {
                                 this.table = this.table.concat(d.data);
-                                console.warn('loadRows', d, this.page);
                             }
                         }
                         else {
                             this.table = d;
-                            console.error('loadRows where paginate?', d, this.page);
-
                         }
 
                         this.loading = false;
-                    })
-                    .catch(e => console.error(e));
-            },
-            getRows() {
-                this.$http
-                    .get('/rpac/users')
-                    .then(r => {
-                        let data = r.data;
-                        this.table = data;
-                        this.loading = false;
-
                     })
                     .catch(e => console.error(e));
             },
@@ -314,7 +272,6 @@
 
         mounted() {
             this.getRoles();
-            //this.getRows();
         }
     }
 </script>
