@@ -4,7 +4,7 @@ namespace Trunow\Rpac\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\User;
-use App\Trunow\Rpac\Role;
+use Trunow\Rpac\Role;
 use Illuminate\Support\Str;
 
 class RpacCommand extends Command
