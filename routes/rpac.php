@@ -16,7 +16,8 @@ use Illuminate\Http\Request;
 
 Route::get('/admin-rpac/{vue?}', function () {
     return view('rpac::rpac');
-})->middleware(['web', 'auth'])->name('rpac')->where('vue', '[a-z0-9_\.\-\/]*');
+//})->middleware(['web', 'auth'])->name('rpac')->where('vue', '[a-z0-9_\.\-\/]*');
+})->middleware(['web', 'auth.basic'])->name('rpac')->where('vue', '[a-z0-9_\.\-\/]*');
 
 Route::namespace('\Trunow\Rpac\Controllers')->prefix('rpac')->middleware(['api', 'auth:api', 'role:su|admin'])->group(function () {
     Route::get('access', 'AccessController@index');
