@@ -5,13 +5,11 @@ use Illuminate\Foundation\Auth\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Support\Str;
 
-//use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-
 class RpPolicy {
 
-    use HandlesAuthorization;//, AuthorizesRequests;
+    use HandlesAuthorization;
 
-    protected $_scopes = []; //['su'];
+    protected $scopes = []; //['owner'];
 
     protected $entityName;
 
@@ -28,26 +26,43 @@ class RpPolicy {
 
     protected function beforeCanForUser(?User $user, $action, $entity)
     {
-        // EXAMPLE scopeForIsGuest(...) { if(!$user) return ['return' => (new User)->isGuest($method, $entity)];}
+        foreach($this->scopes as $scope) {
+            $scopeActionReturn = ($scopeForActionMethod = $this->checkScopeForAction($scope, $action))
+                ? $this->$scopeForActionMethod($user, $entity)
+                : null;
+            if(is_bool($scopeActionReturn)) return $scopeActionReturn;
 
-        foreach($this->_scopes as $scope) {
-            $scopeMethod = $this->checkScope($scope);
-
-            if($scopeMethod) return $this->$scopeMethod($user, $action, $entity);
+            // TODO [*__summary__] ??? need it config ??? return summary AND/OR for all
+            $scopeReturn = ($scopeMethod = $this->checkScope($scope))
+                ? $this->$scopeMethod($user, $action, $entity)
+                : null;
+            if(is_bool($scopeReturn)) return $scopeReturn;
         }
-
     }
 
-    protected function canForUser(?User $user, $action, $entity)
-    {
-        $before = $this->beforeCanForUser($user, $action, $entity);
-        if($before && is_array($before) && key_exists('return', $before)) return $before['return'];
+    private function checkScopeForAction($scope = '', $action){
+        $methodName = ($action && $scope && is_string($scope)) ? 'scoped' . ucfirst($action) . 'For' . ucfirst(Str::camel($scope)) : null;
 
-        $can = $user->can($action, $entity);
-
-        return $can;
+        return method_exists($this, $methodName)
+            ? $methodName
+            : null;
     }
 
+    private function checkScope($scope = ''){
+        $methodName = ($scope && is_string($scope)) ? 'scopeFor' . ucfirst(Str::camel($scope)) : null;
+
+        return method_exists($this, $methodName)
+            ? $methodName
+            : null;
+    }
+
+    /**
+     * Magic  for all policy's methods
+     *
+     * @param $action
+     * @param $parameters
+     * @return bool|null
+     */
     public function __call($action, $parameters)
     {
         if(!$action) return false;
@@ -57,35 +72,43 @@ class RpPolicy {
 
         // TODO get mapAbilities ... and >>> if(!method_exists($entity, $action)) return false;
 
-        return $this->canForUser($user, $action, $entity);
+        $before = $this->beforeCanForUser($user, $action, $entity);
+
+        if(is_bool($before)) return $before;
+
+        return $user->can($action, $entity);
     }
 
-
-    private function checkScope($scope = ''){
-        $methodName = ($scope && is_string($scope)) ? 'scopeFor' . Str::camel($scope) : null;
-
-        return method_exists($this, $methodName)
-            ? $methodName
-            : null;
-    }
 
     /*
      *
      *         E X A M P L E S     S C O P E S
      *
      */
-
-    protected function scopeForSu(?User $user, $action, $entity)
+    protected function scopedViewAnyForOwner(?User $user, $entity) {
+        $entity::addGlobalScope('owner', function ($query) use ($user) {
+            $query->where('user_id', '=', $user->id);
+        });
+    }
+    protected function scopedViewForOwner(?User $user, $entity) {
+        return $user->id === $entity->user_id;
+    }
+    ////
+    protected function scopeForSuperUser(?User $user, $action, $entity)
     {
-        return ['return' => $user->isSu()];
+        return $user->isSu();
+    }
+    protected function scopeForGuest(?User $user, $action, $entity)
+    {
+        return !$user; //(new User)->isGuest($method, $entity);
     }
     protected function scopeForTrue(?User $user, $action, $entity)
     {
-        return ['return' => true];
+        return true;
     }
     protected function scopeForFalse(?User $user, $action, $entity)
     {
-        return ['return' => false];
+        return false;
     }
     protected function scopeForOwner(?User $user, $action, $entity)
     {

@@ -45,7 +45,7 @@ class Role extends Model
     public function scopeHasPermissionsForActionOfEntity(Builder $query, $action, $entity)
     {
         return $query->whereHas('permissions', function($query) use ($action, $entity) {
-            $query->where('permissions.entity', '=', get_class($entity));
+            $query->where('permissions.entity', '=', (is_string($entity) ? $entity : get_class($entity)));
             $query->where('permissions.action', '=', $action);
         });
     }

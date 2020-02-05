@@ -81,6 +81,11 @@ trait Rpacable
      */
     public function can($action, $entity = null)
     {
+        if(is_string($entity)) {
+            if(class_exists($entity)) $entity = new $entity;
+            else throw new \Exception('Not exist class ' . $entity);
+        }
+
         return $this->hasRolesForActionOfEntity($action, $entity);
     }
 
