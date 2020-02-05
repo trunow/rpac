@@ -3,7 +3,7 @@
 namespace Trunow\Rpac\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\User;
+use Illuminate\Foundation\Auth\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -17,7 +17,8 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        return User::with('roles')
+        return config('rpac.models.user')
+                    ::with('roles')
 //                    ->abonents($request->has('abonents'))
 //                    ->search($request->input('q'))
                     ->paginate($request->paginate ?: config('rest.paginate') ?: 50);
@@ -44,7 +45,7 @@ class UserController extends Controller
         $password = $data['password'] ?? bin2hex(random_bytes(4)); // Str::random(8);
         $data['password'] = bcrypt($password);
 
-        $user = User::create($data);
+        $user = config('rpac.models.user')::create($data);
         if(count($roles)) $user->roles()->attach($roles);
 
         // TODO event -> mail -> password
@@ -55,7 +56,7 @@ class UserController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\User  $user
+     * @param  \Illuminate\Foundation\Auth\User  $user
      * @return \Illuminate\Http\Response
      */
     public function show(User $user)
@@ -67,7 +68,7 @@ class UserController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\User  $user
+     * @param  \Illuminate\Foundation\Auth\User  $user
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, User $user)
@@ -131,7 +132,7 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\User  $user
+     * @param  \Illuminate\Foundation\Auth\User  $user
      * @return \Illuminate\Http\Response
      */
     public function destroy(User $user)

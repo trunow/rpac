@@ -31,7 +31,7 @@ class Role extends Model
      */
     public function users()
     {
-        return $this->belongsToMany(config('auth.model'))->withTimestamps();
+        return $this->belongsToMany(config('rpac.models.user'))->withTimestamps();
     }
 
     /**

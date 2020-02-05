@@ -3,8 +3,6 @@
 namespace Trunow\Rpac\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\User;
-use Trunow\Rpac\Role;
 use Illuminate\Support\Str;
 
 class RpacCommand extends Command
@@ -23,6 +21,9 @@ class RpacCommand extends Command
      */
     protected $description = 'Создаёт роль и привязывает/создаёт пользователя';
 
+    protected $roleModel;
+    protected $userModel;
+
     /**
      * Create a new command instance.
      *
@@ -30,6 +31,9 @@ class RpacCommand extends Command
      */
     public function __construct()
     {
+        $this->userModel = config('rpac.models.user');
+        $this->roleModel = config('rpac.models.role');
+
         parent::__construct();
     }
 
@@ -41,6 +45,7 @@ class RpacCommand extends Command
     public function handle()
     {
         $acts = explode(':', $this->argument('act'));
+
 
         if(!count($acts)) {
             $info = 'Непонятный аргумент ('. $this->argument('act') .'). Нужно так: `php artisan rpac su:1` или `php artisan rpac admin:email@example.com:password`';
@@ -59,11 +64,12 @@ class RpacCommand extends Command
                 $user = null;
                 $userEmail = filter_var($userSlug, FILTER_VALIDATE_EMAIL);
 
+
                 if($userEmail) {
-                    $user = User::where('email', $userEmail)->first();
+                    $user = $this->userModel::where('email', $userEmail)->first();
                 }
                 else {
-                    $user = User::find($userSlug);
+                    $user = $this->userModel::find($userSlug);
                     if(!$user) {
                         $error = 'Не найден пользователь по ID (или неверный формат EMAIL). Попробуйте указать EMAIL: `php artisan rpac su:email@example.com`';
                     }
@@ -74,14 +80,14 @@ class RpacCommand extends Command
                 }
                 else {
 
-                    $role = Role::firstOrCreate(['slug' => $roleSlug]);
+                    $role = $this->roleModel::firstOrCreate(['slug' => $roleSlug]);
                     if(!$role->name) $role->update(['name' => $role->slug]);
 
                     if(!$user) {
                         // Если не указан пароль - генерируем
                         if(!$userPass) $userPass = Str::random(6);
 
-                        $user = User::create(['name' => $userEmail, 'email' => $userEmail, 'password' => bcrypt($userPass), 'api_token' => Str::random(60)]);
+                        $user = $this->userModel::create(['name' => $userEmail, 'email' => $userEmail, 'password' => bcrypt($userPass), 'api_token' => Str::random(60)]);
                         $info = 'Cоздан';
                     }
                     else {

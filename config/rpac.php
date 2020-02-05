@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'connection' => null,
+    'connection' => null, // TODO
 
     /*
     |--------------------------------------------------------------------------
@@ -27,6 +27,7 @@ return [
     */
 
     'models' => [
+        'user' => App\User::class,
         'role' => Trunow\Rpac\Role::class,
         'permission' => Trunow\Rpac\Permission::class,
     ],

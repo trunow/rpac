@@ -1,7 +1,7 @@
 <?php
 namespace Trunow\Rpac\Policies;
 
-use App\User;
+use Illuminate\Foundation\Auth\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Support\Str;
 

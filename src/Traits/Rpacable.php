@@ -6,7 +6,7 @@
 
 namespace Trunow\Rpac\Traits;
 
-use App\User;
+use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Str;
 
 trait Rpacable
@@ -113,8 +113,8 @@ trait Rpacable
     {
         parent::boot();
 
-        static::saving(function (User $model) {
-            if(!$model->api_token) $model->api_token = Str::random(60);
+        static::saving(function (User $user) {
+            if(!$user->api_token) $user->api_token = Str::random(60);
         });
     }
 
