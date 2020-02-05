@@ -92,6 +92,19 @@ Run command, example `rpac su:1` or `rpac admin:email@example.com` or `role:user
 
 ### Creating Policy
 
+Create empty policy class extends `RpPolicy` for your model.
+
+```php
+namespace App\Policies;
+
+use Trunow\Rpac\Policies\RpPolicy;
+
+class PostPolicy extends RpPolicy
+{
+    //...
+}
+```
+
 TODO
 
 

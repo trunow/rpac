@@ -261,20 +261,18 @@
                 this.$http
                     .post('/rpac/permissions/' + rowId, {_method: 'DELETE'})
                     .then(r => {
-                        //console.warn(r.data);
                         return r.data;
                     })
                     .then(d => {
-                        //console.warn(d);
+                        this.edit = null;
+                        this.getTableData();
                         // let rowInd = this.table.findIndex(r => r.id === rowId);
                         // this.table.splice(rowInd, 1);
-                        this.edit = null;
-                        this.loading = false;
+                        // this.loading = false;
                     })
                     .catch(e => console.error(e));
             },
             changeRow(row, roleId){
-                //console.warn(row, roleId);
                 this.loading = true;
                 row._method = 'PUT';
                 row.role = roleId;
@@ -285,15 +283,11 @@
                 this.$http
                     .post('/rpac/permissions/' + row.id, row)
                     .then(r => {
-                        //console.warn(r.data);
                         return r.data;
                     })
                     .then(d => {
-
-                        // console.warn('saveRow then2 before', d);
                         let rowInd = this.collapses[d.entity].findIndex(r => r.id === d.id);
                         this.collapses[d.entity][rowInd] = d;
-                        // console.warn('saveRow then2 after', d);
 
                         this.edit = null;
                         this.loading = false;
@@ -308,28 +302,15 @@
             },
             getTableData() {
 
-                // this.$http
-                //     .get('/rpac/roles')
-                //     .then(r => {
-                //         console.warn(r);
-                //         this.table = r.data;
-                //     })
-                //     .catch(e => console.error(e));
-
                 this.$http
                     .get('/rpac/permissions')
                     .then(r => {
 
+                        //console.log('permissions', r);
+
                         this.entities = Object.keys(r.data);
                         this.collapses = r.data;
 
-                        // s
-
-                        //this.table = Object.values(r.data);
-
-                        console.warn('permissions', r, this.table);
-                        // this.table = r.data;
-                        // this.loading = false;
                         this.loading = false;
                     })
                     .catch(e => console.error(e));

@@ -9,7 +9,6 @@
             </el-col>
         </el-row>
 
-
         <el-dialog title="Новый пользователь" :visible.sync="create">
             <el-form :model="form" label-width="120px">
                 <el-form-item label="Имя">
@@ -39,7 +38,7 @@
             <el-table
                     v-loading="loading"
                     :data="tableData"
-                    v-infinite-scroll="loadRows"
+                    v-infinite-scroll="loadUsers"
                     infinite-scroll-disabled="disabled"
                     style="min-width: 100%"
             >
@@ -106,7 +105,6 @@
                                 <el-tag size="mini" v-for="(role,ind) in scope.row.roles" :key="ind">{{ role.name }}</el-tag>
                             </template>
                         </span>
-                        <!--<span v-else>{{ scope.row.roles && scope.row.roles.length ? scope.row.roles.map(r=>r.name).join('; ') : '' }}</span>-->
                     </template>
                 </el-table-column>
                 <el-table-column
@@ -176,7 +174,7 @@
                 return this.loading || this.noMore
             },
             tableData () {
-                let table = this.table.filter(r => r.deleted_at === null);
+                let table = this.table.filter(r => !r.deleted_at);
                 // TODO if filter.with_trashed ??
                 return this.searchingColumn && this.search ? table.filter(r => ~r[this.searchingColumn.property].indexOf(this.search)) : table;
             },
@@ -186,26 +184,10 @@
         },
 
         methods: {
-            searchColumnIcon(column) {
-                return this.searchingColumn === column ? 'el-icon-close' : 'el-icon-search';
-            },
-            searchByColumn(column) {
-                if(this.searchingColumn === column) {
-                    this.searchingColumn = null;
-                    this.search = '';
-                }
-                else {
-                    this.searchingColumn = column;
-                }
-            },
-
             filterByRole(value, row, column) {
                 const property = column['property'];
                 return row[property].find(r => r.id === value);
             },
-
-
-            getRelatioins() {},
 
             getRoles() {
                 this.$http
@@ -222,7 +204,7 @@
                     .then(r => {
                         this.create = false;
                         this.form = {};
-                        this.table.push(r.data);// TODO this.loadRows();
+                        this.table.push(r.data);// TODO this.loadUsers();
                     })
                     .catch(e => console.error(e));
             },
@@ -242,7 +224,7 @@
                     })
                     .catch(e => console.error(e));
             },
-            loadRows() {
+            loadUsers() {
                 this.loading = true;
 
                 this.$http
@@ -251,6 +233,7 @@
                         return r.data;
                     })
                     .then(d => {
+                        // console.log('loadUsers', d);
                         if(d.total && d.to) {
                             if(d.current_page === d.last_page) {
                                 this.noMore = true;

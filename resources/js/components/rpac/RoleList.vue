@@ -124,11 +124,11 @@
                 this.$http
                     .post('/rpac/roles/', this.form)
                     .then(r => {
-                        //console.warn(r.data);
+                        //console.log(r.data);
                         return r.data;
                     })
                     .then(d => {
-                        //console.warn(d);
+                        //console.log(d);
                         this.table.push(d);
                         this.form = {
                             name: '',
@@ -144,11 +144,11 @@
                 this.$http
                     .post('/rpac/roles/' + rowId, {_method: 'DELETE'})
                     .then(r => {
-                        //console.warn(r.data);
+                        //console.log(r.data);
                         return r.data;
                     })
                     .then(d => {
-                        //console.warn(d);
+                        //console.log(d);
                         let rowInd = this.table.findIndex(r => r.id === rowId);
                         this.edit = null;
                         this.table.splice(rowInd, 1);
@@ -162,11 +162,11 @@
                 this.$http
                     .post('/rpac/roles/' + row.id, row)
                     .then(r => {
-                        //console.warn(r.data);
+                        //console.log(r.data);
                         return r.data;
                     })
                     .then(d => {
-                        //console.warn(d);
+                        //console.log(d);
                         let rowInd = this.table.findIndex(r => r.id === d.id);
                         this.table[rowInd] = d;
                         this.edit = null;
@@ -184,7 +184,7 @@
                 this.$http
                     .get('/rpac/roles')
                     .then(r => {
-                        console.warn(r);
+                        //console.log('getTableData', r);
                         this.table = r.data;
                         this.loading = false;
                     })
