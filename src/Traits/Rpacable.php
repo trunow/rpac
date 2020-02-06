@@ -41,7 +41,7 @@ trait Rpacable
     /**
      * Check if the user has at least one role.
      *
-     * @param int|string|array $role
+     * @param int|string|array $roles
      * @return bool
      */
     public function isOr($roles)
@@ -52,7 +52,7 @@ trait Rpacable
     /**
      * Check if the user has all roles.
      *
-     * @param int|string|array $role
+     * @param int|string|array $roles
      * @return bool
      */
     public function isAnd($roles)
@@ -64,7 +64,7 @@ trait Rpacable
      * Get method name.
      *
      * @param string $methodName
-     * @param bool $all
+     * @param bool $useAnd
      * @return string
      */
     private function buildMethodName($methodName, $useAnd = false)
