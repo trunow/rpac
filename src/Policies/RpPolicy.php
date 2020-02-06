@@ -87,11 +87,11 @@ class RpPolicy {
      */
     protected function scopedViewAnyForOwner(?User $user, $entity) {
         $entity::addGlobalScope('owner', function ($query) use ($user) {
-            $query->where('user_id', '=', $user->id);
+            $query->where('user_id', '=', $user->key());
         });
     }
     protected function scopedViewForOwner(?User $user, $entity) {
-        return $user->id === $entity->user_id;
+        return $user->key() === $entity->user_id;
     }
     ////
     protected function scopeForSuperUser(?User $user, $action, $entity)
@@ -113,7 +113,7 @@ class RpPolicy {
     protected function scopeForOwner(?User $user, $action, $entity)
     {
         $entity::addGlobalScope('owner', function ($query) use ($user) {
-            $query->where('user_id', '=', $user->id);
+            $query->where('user_id', '=', $user->key());
         });
         //::addGlobalScope(new OwnerScope);
     }
