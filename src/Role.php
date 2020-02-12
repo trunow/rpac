@@ -3,7 +3,7 @@
 namespace Trunow\Rpac;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Foundation\Auth\User;
 
 class Role extends Model
 {
@@ -21,7 +21,7 @@ class Role extends Model
      */
     public function permissions()
     {
-        return $this->belongsToMany(config('rpac.models.permission'));//->withTimestamps();
+        return $this->belongsToMany(Permission::class);//->withTimestamps();
     }
 
     /**
@@ -31,23 +31,6 @@ class Role extends Model
      */
     public function users()
     {
-        return $this->belongsToMany(config('rpac.models.user'))->withTimestamps();
+        return $this->belongsToMany(User::class)->withTimestamps();
     }
-
-    /**
-     * Only roles has permissions for entity's action.
-     *
-     * @param Builder $query
-     * @param $action
-     * @param $entity
-     * @return Builder
-     */
-    public function scopeHasPermissionsForActionOfEntity(Builder $query, $action, $entity)
-    {
-        return $query->whereHas('permissions', function($query) use ($action, $entity) {
-            $query->where('permissions.entity', '=', (is_string($entity) ? $entity : get_class($entity)));
-            $query->where('permissions.action', '=', $action);
-        });
-    }
-
 }

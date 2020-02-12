@@ -16,8 +16,11 @@ class CreatePermissionsTable extends Migration
             $table->increments('id')->unsigned();
             $table->string('name');
             $table->string('entity')->nullable();
+            $table->string('role')->nullable();
             $table->string('action')->nullable();
             $table->timestamps();
+
+            $table->unique(['entity', 'role', 'action']);
         });
     }
 

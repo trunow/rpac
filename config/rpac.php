@@ -30,6 +30,7 @@ return [
         'user' => App\User::class,
         'role' => Trunow\Rpac\Role::class,
         'permission' => Trunow\Rpac\Permission::class,
+        'relationship' => \Trunow\Rpac\Relationship::class,
     ],
 
     /*

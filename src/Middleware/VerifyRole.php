@@ -33,7 +33,7 @@ class VerifyRole
      */
     public function handle($request, Closure $next, $roles = '')
     {
-        if ($this->auth->check() && $this->auth->user()->is(!empty($roles) ? explode( "|", $roles) : [])) {
+        if ($this->auth->check() && $this->auth->user()->playRole(!empty($roles) ? explode( "|", $roles) : [])) {
             //$this->auth->user()->load('roles');
             return $next($request);
         }

@@ -30,7 +30,6 @@ class VerifyPermission
      * @param \Closure $next
      * @param int|string $permission
      * @return mixed
-     * @throws \Trunow\Rpac\Exceptions\PermissionDeniedException
      */
     public function handle($request, Closure $next, $permission)
     {
