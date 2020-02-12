@@ -28,7 +28,7 @@ class VerifyRole
      *
      * @param \Illuminate\Http\Request $request
      * @param \Closure $next
-     * @param int|string $roles
+     * @param int|string $role
      * @return mixed
      */
     public function handle($request, Closure $next, $roles = '')
