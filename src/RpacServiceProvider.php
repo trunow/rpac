@@ -46,7 +46,6 @@ class RpacServiceProvider extends ServiceProvider
 
     private function bootMiddleware()
     {
-        /** @var Router $router */
         $this->app['router']->aliasMiddleware('role', VerifyRole::class);
     }
 
@@ -70,7 +69,7 @@ class RpacServiceProvider extends ServiceProvider
         $blade = $this->app['view']->getEngineResolver()->resolve('blade')->getCompiler();
 
         $blade->directive('role', function ($expression) {
-            return "<?php if (Auth::check() && Auth::user()->is{$expression}): ?>";
+            return "<?php if (Auth::check() && Auth::user()->playRole{$expression}): ?>";
         });
 
         $blade->directive('endrole', function () {

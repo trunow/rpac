@@ -7,22 +7,26 @@
 namespace Trunow\Rpac\Traits;
 
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Str;
 use Trunow\Rpac\Role;
 
 /**
- * Trait Rpacable
+ * Trait Roles add Roles to User model
  * @package Trunow\Rpac\Traits
+ * @mixin Model
  *
+ * @property string $api_token
  * @property Collection|Role[] $roles
  */
-trait Roles
+trait PlayRoles
 {
     /**
      * User belongs to many roles.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @return BelongsToMany
      */
     public function roles()
     {
@@ -44,7 +48,7 @@ trait Roles
     {
         parent::boot();
 
-        static::saving(function (User $user) {
+        static::saving(function (PlayRoles $user) {
             if(!$user->api_token) $user->api_token = Str::random(60);
         });
     }

@@ -9,7 +9,7 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Support\Str;
 use Trunow\Rpac\Permission;
 use Trunow\Rpac\Role;
-use Trunow\Rpac\Traits\Roles;
+use Trunow\Rpac\Traits\PlayRoles;
 
 abstract class GenericPolicy
 {
@@ -21,6 +21,12 @@ abstract class GenericPolicy
      * @example ['owner', 'manager']
      */
     protected $relationships = [];
+
+    /**
+     * Per-hit data storage
+     * @var array
+     */
+    private $cache = [];
 
     /**
      * Returns list of available Policy actions
@@ -73,25 +79,26 @@ abstract class GenericPolicy
     /**
      * Returns list of available Policy relationships
      * @param boolean $namespace apply namespace
-     * @throws \ReflectionException
      * @return array
+     * @throws \ReflectionException
      * @deprecated Move it to admin backend
      */
     public function relationships($namespace = false)
     {
         $reflection = new \ReflectionClass($this->model());
-        $methods = array_filter($reflection->getMethods(), function(\ReflectionMethod $n) {
+        $methods = array_filter($reflection->getMethods(), function (\ReflectionMethod $n) {
             return Str::startsWith($n->name, 'scopeRelationship') ? $n : null;
         });
-        $methods = array_map(function(\ReflectionMethod $n) {
+        $methods = array_map(function (\ReflectionMethod $n) {
             $name = Str::replaceFirst('scopeRelationship', '', $n->name);
             return Str::snake($name);
         }, $methods);
 
         $methods = $namespace ? $this->applyNamespace($this->pseudoName(), $methods) : $methods;
 
-        return array_merge($namespace ? $this->applyNamespace('Core', ['guest', 'any']) : ['guest', 'any'] , $methods);
+        return array_merge($namespace ? $this->applyNamespace('Core', ['guest', 'any']) : ['guest', 'any'], $methods);
     }
+
     /**
      * Returns all available Roles and Relationships applicable to the Model
      * @return array
@@ -107,7 +114,6 @@ abstract class GenericPolicy
 
         return $roles;
     }
-
 
 
     /**
@@ -174,7 +180,8 @@ abstract class GenericPolicy
     {
         $scopeName = 'relationship' . Str::studly($relationship); // relationship{Name}()
         $methodName = 'scope' . Str::studly($scopeName); // scopeRelationship{Name}()
-        return method_exists($this->model(), $methodName) ? $scopeName : null;
+        return $scopeName;
+//        return method_exists($this->model(), $methodName) ? $scopeName : null;
     }
 
     /**
@@ -189,38 +196,28 @@ abstract class GenericPolicy
         /* @var Model $ent */
         $ent = new $model();
 
-        // As checkPermissions called without model, it checks only user roles
-        // If permissions returns true — user may observe all recordSet
+        // As authorize() called without model, it checks only roles
+        // If it returns true — user may observe all recordSet
 
-        if (!$this->allow($action, $user)) {
+        if (!$this->authorize($action, $user)) {
 
             // Get all user relationship scopes and combine them into one query
             // Then scope model with that query
             // If model has no relationship scopes, will return empty scope
 
-            $scopeApplied = false;
-
             if ($relationships = $this->getActionRelationships($action)) {
-                $this->model()::addGlobalScope($scopeName, function (Builder $query) use ($relationships, $user, $scopeApplied) {
+                $this->model()::addGlobalScope($scopeName, function (Builder $query) use ($relationships, $user) {
                     foreach ($relationships as $relationship) {
 
-                        if ($scopeName = $this->getScopeName($relationship)) {
-                            if (!$scopeApplied) {
-                                $scopeApplied = true;
-                                $query->where(function (Builder $query) use ($scopeName, $user) {
-                                    $query->$scopeName($user);
-                                });
-                            } else {
-                                $query->orWhere(function (Builder $query) use ($scopeName, $user) {
-                                    $query->$scopeName($user);
-                                });
-                            }
-                        }
+                        $scopeName = $this->getScopeName($relationship);
+                        $query->orWhere(function (Builder $query) use ($scopeName, $user) {
+                            $query->$scopeName($user);
+                        });
+
                     }
                 });
-            } elseif (!$scopeApplied) {
-                // No scope rules were applied
-                // That means, developer not defined any relationship scopes
+            } else {
+                // Developer not defined any relationship scopes
                 // Apply empty scope to prevent user access to unauthorized models
                 $this->model()::addGlobalScope($scopeName, function (Builder $query) use ($ent) {
                     $query->where($ent->getKeyName(), 0);
@@ -249,13 +246,21 @@ abstract class GenericPolicy
 
     /**
      * Returns concrete user roles
-     * @param User|Roles|null $user
-     * @return array|string
+     * @param User|PlayRoles|null $user
+     * @return array
      */
     protected function getUserRoles(?User $user)
     {
-        return $user->roles->pluck('slug')->toArray();
-        //return $user ? $this->applyNamespace('Role', $user->roles->pluck('slug')->toArray()) : [];
+        if ($user) {
+            if (!isset($this->cache["user-roles"])) {
+                $this->cache["user-roles"] =
+                    $user->roles->pluck('slug')->toArray();
+//                    $this->applyNamespace('Role', $user->roles->pluck('slug')->toArray())
+            }
+            return $this->cache["user-roles"];
+        } else {
+            return [];
+        }
     }
 
     /**
@@ -295,19 +300,35 @@ abstract class GenericPolicy
      */
     protected function getActionRelationships($action)
     {
-        $permissions = Permission::where('action', $action)
-            ->where('entity', $this->pseudoName())->pluck('role')->toArray();
-        $permissions = array_map(function ($n) {
+        $entity = $this->pseudoName();
+
+        $relationships = Permission::cached()->filter(
+            function (Permission $perm) use ($action, $entity) {
+                return (
+                    $perm->action == $action &&
+                    $perm->entity == $entity
+                );
+            }
+        )->pluck('role')->toArray();
+
+        $relationships = array_map(function ($n) {
             $n = explode('\\', $n);
             $n = array_pop($n);
             return Str::snake($n);
-        }, $permissions);
+        }, $relationships);
 
-        $permissions = array_intersect($permissions, $this->relationships);
+        $relationships = array_intersect($relationships, $this->relationships);
 
-        return $permissions;
+        return $relationships;
     }
 
+    /**
+     * Checks User ability to perform Action against Model and put scope on Model
+     * @param string $action action to check
+     * @param string $scope make scope with only Models allowed to that action
+     * @param User|null $user
+     * @return bool
+     */
     protected function authorizeAndScope($action, $scope, ?User $user)
     {
         $allow = $this->authorize($action, $user);
@@ -315,21 +336,36 @@ abstract class GenericPolicy
         return $allow;
     }
 
+    /**
+     * Checks User ability to perform Action against Model
+     * @param string $action
+     * @param User|null $user
+     * @param Model|null $model
+     * @return bool
+     */
     protected function authorize($action, ?User $user, $model = null)
     {
-        $relis = $this->getUserRelationships($user, $model);
-        $roles = $this->getUserRoles($user);
+        $roles = array_merge(
+            $this->getUserRelationships($user, $model),
+            $this->getUserRoles($user)
+        );
+        $entity = $this->pseudoName();
 
 //        dump("User: {$user}");
 //        dump("Action: {$action}");
 //        dump("Against: {$model}");
-//        dump(array_merge($relis, $roles));
+//        dump(array_merge($roles));
 
-        /** @var Builder $permissions */
-        $permissions = Permission::where('action', $action)
-            ->where('entity', $this->pseudoName())
-            ->whereIn('role', array_merge($relis, $roles));
+        $permissions = Permission::cached()->filter(
+            function (Permission $perm) use ($action, $entity, $roles) {
+                return (
+                    $perm->action == $action &&
+                    $perm->entity == $entity &&
+                    in_array($perm->role, $roles)
+                );
+            }
+        );
 
-        return !!$permissions->count();
+        return (boolean)$permissions->count();
     }
 }

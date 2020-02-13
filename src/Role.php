@@ -3,6 +3,7 @@
 namespace Trunow\Rpac;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User;
 
 class Role extends Model
@@ -17,7 +18,7 @@ class Role extends Model
     /**
      * Role belongs to many permissions.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @return BelongsToMany
      */
     public function permissions()
     {
@@ -27,7 +28,7 @@ class Role extends Model
     /**
      * Role belongs to many users.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @return BelongsToMany
      */
     public function users()
     {
