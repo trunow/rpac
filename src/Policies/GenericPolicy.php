@@ -9,7 +9,7 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Support\Str;
 use Trunow\Rpac\Permission;
 use Trunow\Rpac\Role;
-use Trunow\Rpac\Traits\PlayRoles;
+use Trunow\Rpac\Traits\PlayingRoles;
 
 abstract class GenericPolicy
 {
@@ -246,7 +246,7 @@ abstract class GenericPolicy
 
     /**
      * Returns concrete user roles
-     * @param User|PlayRoles|null $user
+     * @param User|PlayingRoles|null $user
      * @return array
      */
     protected function getUserRoles(?User $user)

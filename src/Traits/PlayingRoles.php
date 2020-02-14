@@ -21,7 +21,7 @@ use Trunow\Rpac\Role;
  * @property string $api_token
  * @property Collection|Role[] $roles
  */
-trait PlayRoles
+trait PlayingRoles
 {
     /**
      * User belongs to many roles.
@@ -34,21 +34,22 @@ trait PlayRoles
     }
 
     /**
-     * Check if User play given role(s)
+     * Check if User play every given role(s)
      *
      * @param string|array $role
      * @return bool
      */
     public function playRole($role)
     {
-        return count((array)$role) === $this->roles->whereIn('slug', $role)->count();
+        $role = explode(' ', $role);
+        return count($role) === $this->roles->whereIn('slug', $role)->count();
     }
 
     public static function boot()
     {
         parent::boot();
 
-        static::saving(function (PlayRoles $user) {
+        static::saving(function (PlayingRoles $user) {
             if(!$user->api_token) $user->api_token = Str::random(60);
         });
     }
