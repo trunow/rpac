@@ -9,11 +9,14 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Support\Str;
 use Trunow\Rpac\Permission;
 use Trunow\Rpac\Role;
-use Trunow\Rpac\Traits\PlayingRoles;
+use Trunow\Rpac\Traits\Roles;
 
 abstract class GenericPolicy
 {
     use HandlesAuthorization;
+
+    const BuiltInNamespace = 'Core';
+    const RoleNamespace = 'Role';
 
     /**
      * Set of relationships between User and Model
@@ -37,7 +40,7 @@ abstract class GenericPolicy
      */
     public function actions($option = null)
     {
-        $pseudoName = $this->pseudoName();
+        $pseudoName = $this->modelNamespace();
         $reflection = new \ReflectionClass(get_class($this));
         return array_values(
             array_map(function (\ReflectionMethod $n) use ($pseudoName) {
@@ -94,9 +97,9 @@ abstract class GenericPolicy
             return Str::snake($name);
         }, $methods);
 
-        $methods = $namespace ? $this->applyNamespace($this->pseudoName(), $methods) : $methods;
+        $methods = $namespace ? $this->applyNamespace($this->modelNamespace(), $methods) : $methods;
 
-        return array_merge($namespace ? $this->applyNamespace('Core', ['guest', 'any']) : ['guest', 'any'], $methods);
+        return array_merge($namespace ? $this->applyNamespace(self::BuiltInNamespace, ['guest', 'any']) : ['guest', 'any'], $methods);
     }
 
     /**
@@ -107,9 +110,9 @@ abstract class GenericPolicy
     public function rolesAndRelationships()
     {
         $roles = array_merge(
-            $this->applyNamespace('Core', ['guest', 'any']),
-            $this->applyNamespace('Role', Role::pluck('slug')->toArray()),
-            $this->applyNamespace($this->pseudoName(), $this->relationships)
+            $this->applyNamespace(self::BuiltInNamespace, ['guest', 'any']),
+            $this->applyNamespace(self::RoleNamespace, Role::pluck('slug')->toArray()),
+            $this->applyNamespace($this->modelNamespace(), $this->relationships)
         );
 
         return $roles;
@@ -137,7 +140,7 @@ abstract class GenericPolicy
      * The Policy pseudo-name for usage in permission table
      * @return string
      */
-    private function pseudoName()
+    private function modelNamespace()
     {
         $name = explode('Policies\\', get_class($this));
         $name = Str::replaceFirst('Policy', '', $name[1]);
@@ -149,11 +152,26 @@ abstract class GenericPolicy
      * Policy need to know Model it works with
      * @return string
      */
-    abstract protected function model();
+    protected function model()
+    {
+        return Str::replaceLast('Policy', '', self::class);
+    }
+
+    /**
+     * Default (built-in) permission rules
+     * @param string $action
+     * @param string $subject
+     * @return bool
+     */
+    protected function defaults($action, $subject)
+    {
+        return false;
+    }
 
     public function viewAny(?User $user)
     {
-        return $this->authorizeAndScope('viewAny', 'view', $user);
+        $this->applyScope('view', $user);
+        return $this->authorize('viewAny', $user);
     }
 
     public function create(?User $user)
@@ -187,9 +205,8 @@ abstract class GenericPolicy
     /**
      * @param $action
      * @param User|null $user
-     * @return $this
      */
-    private function scope($action, ?User $user)
+    protected function applyScope($action, ?User $user)
     {
         $scopeName = "{$this->model()}\\{$action}";
         $model = $this->model();
@@ -230,7 +247,7 @@ abstract class GenericPolicy
     }
 
     /**
-     * Returns QueryBuilder assosiated to relationship
+     * Returns QueryBuilder associated to relationship
      * @param string $relationship
      * @param User $user
      * @return Builder|null
@@ -246,7 +263,7 @@ abstract class GenericPolicy
 
     /**
      * Returns concrete user roles
-     * @param User|PlayingRoles|null $user
+     * @param User|Roles|null $user
      * @return array
      */
     protected function getUserRoles(?User $user)
@@ -254,8 +271,7 @@ abstract class GenericPolicy
         if ($user) {
             if (!isset($this->cache["user-roles"])) {
                 $this->cache["user-roles"] =
-                    $user->roles->pluck('slug')->toArray();
-//                    $this->applyNamespace('Role', $user->roles->pluck('slug')->toArray())
+                    $this->applyNamespace(self::RoleNamespace, $user->roles->pluck('slug')->toArray());
             }
             return $this->cache["user-roles"];
         } else {
@@ -272,7 +288,7 @@ abstract class GenericPolicy
     protected function getUserRelationships(?User $user = null, ?Model $model = null)
     {
         if ($user) {
-            $roles = $this->applyNamespace('Core', ['any']);
+            $roles = $this->applyNamespace(self::BuiltInNamespace, ['any']);
 
             if ($model) {
                 foreach ($this->relationships as $relationship) {
@@ -280,14 +296,14 @@ abstract class GenericPolicy
                         // Check if given Model relates to User throw $relationship
                         $query->where($model->getKeyName(), $model->getKey());
                         if ($query->count()) {
-                            $roles[] = $this->applyNamespace($this->pseudoName(), $relationship);
+                            $roles[] = $this->applyNamespace($this->modelNamespace(), $relationship);
                         }
                     }
                 }
             }
 
         } else {
-            $roles = $this->applyNamespace('Core', ['guest']);
+            $roles = $this->applyNamespace(self::BuiltInNamespace, ['guest']);
         }
 
         return $roles;
@@ -300,13 +316,13 @@ abstract class GenericPolicy
      */
     protected function getActionRelationships($action)
     {
-        $entity = $this->pseudoName();
+        $entity = $this->modelNamespace();
 
         $relationships = Permission::cached()->filter(
             function (Permission $perm) use ($action, $entity) {
                 return (
                     $perm->action == $action &&
-                    $perm->entity == $entity
+                    $perm->object == $entity
                 );
             }
         )->pluck('role')->toArray();
@@ -323,20 +339,6 @@ abstract class GenericPolicy
     }
 
     /**
-     * Checks User ability to perform Action against Model and put scope on Model
-     * @param string $action action to check
-     * @param string $scope make scope with only Models allowed to that action
-     * @param User|null $user
-     * @return bool
-     */
-    protected function authorizeAndScope($action, $scope, ?User $user)
-    {
-        $allow = $this->authorize($action, $user);
-        $this->scope($scope, $user);
-        return $allow;
-    }
-
-    /**
      * Checks User ability to perform Action against Model
      * @param string $action
      * @param User|null $user
@@ -349,7 +351,7 @@ abstract class GenericPolicy
             $this->getUserRelationships($user, $model),
             $this->getUserRoles($user)
         );
-        $entity = $this->pseudoName();
+        $entity = $this->modelNamespace();
 
 //        dump("User: {$user}");
 //        dump("Action: {$action}");
@@ -360,12 +362,23 @@ abstract class GenericPolicy
             function (Permission $perm) use ($action, $entity, $roles) {
                 return (
                     $perm->action == $action &&
-                    $perm->entity == $entity &&
-                    in_array($perm->role, $roles)
+                    $perm->object == $entity &&
+                    in_array($perm->subject, $roles)
                 );
             }
         );
 
-        return (boolean)$permissions->count();
+        $permitted = (boolean)$permissions->count();
+
+        if (!$permitted) {
+            foreach ($roles as $role) {
+                if ($this->defaults($action, $role)) {
+                    $permitted = true;
+                    break;
+                }
+            }
+        }
+
+        return $permitted;
     }
 }

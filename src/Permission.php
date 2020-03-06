@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\Cache;
  * @package Trunow\Rpac
  *
  * @property string $action
- * @property string $entity
- * @property string $role
+ * @property string $object
+ * @property string $subject
  */
 class Permission extends Model
 {
@@ -40,5 +40,5 @@ class Permission extends Model
      *
      * @var array
      */
-    protected $fillable = ['name', 'entity', 'role', 'action'];
+    protected $fillable = ['object', 'subject', 'action'];
 }
