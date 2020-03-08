@@ -10,9 +10,8 @@ use Illuminate\Support\Facades\Cache;
  * Class Permission
  * @package Trunow\Rpac
  *
- * @property string $action
- * @property string $object
- * @property string $subject
+ * @property string $signature
+ * @property string $role
  */
 class Permission extends Model
 {
@@ -40,5 +39,5 @@ class Permission extends Model
      *
      * @var array
      */
-    protected $fillable = ['object', 'subject', 'action'];
+    protected $fillable = ['signature', 'role'];
 }

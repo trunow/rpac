@@ -14,9 +14,8 @@ class CreatePermissionsTable extends Migration
     {
         Schema::create('permissions', function (Blueprint $table) {
             $table->increments('id')->unsigned();
-            $table->string('subject')->comment('Who, e.g. admin or author');
-            $table->string('action')->comment('Action, e.g. view or edit');
-            $table->string('object')->comment('What, e.g. post or article');
+            $table->string('signature');
+            $table->string('role');
             $table->timestamps();
 
             $table->unique(['entity', 'role', 'action']);

@@ -154,6 +154,7 @@ abstract class GenericPolicy
      */
     protected function model()
     {
+        //TODO error here I see
         return Str::replaceLast('Policy', '', self::class);
     }
 
@@ -310,19 +311,27 @@ abstract class GenericPolicy
     }
 
     /**
+     * Signature is a Model+Action string, used as 'action' in abstract sense
+     * @param string $action
+     * @return string
+     */
+    protected function getSignature($action)
+    {
+        return "{$this->modelNamespace()}:{$action}";
+    }
+
+    /**
      * Returns relationships, allowed to perform given action
      * @param string $action
      * @return array
      */
     protected function getActionRelationships($action)
     {
-        $entity = $this->modelNamespace();
-
+        $signature = $this->getSignature($action);
         $relationships = Permission::cached()->filter(
-            function (Permission $perm) use ($action, $entity) {
+            function (Permission $perm) use ($signature) {
                 return (
-                    $perm->action == $action &&
-                    $perm->object == $entity
+                    $perm->signature == $signature
                 );
             }
         )->pluck('role')->toArray();
@@ -331,6 +340,7 @@ abstract class GenericPolicy
             $n = explode('\\', $n);
             $n = array_pop($n);
             return Str::snake($n);
+            // TODO check string transformations
         }, $relationships);
 
         $relationships = array_intersect($relationships, $this->relationships);
@@ -351,19 +361,18 @@ abstract class GenericPolicy
             $this->getUserRelationships($user, $model),
             $this->getUserRoles($user)
         );
-        $entity = $this->modelNamespace();
 
 //        dump("User: {$user}");
 //        dump("Action: {$action}");
 //        dump("Against: {$model}");
 //        dump(array_merge($roles));
 
+        $signature = $this->getSignature($action);
         $permissions = Permission::cached()->filter(
-            function (Permission $perm) use ($action, $entity, $roles) {
+            function (Permission $perm) use ($signature, $roles) {
                 return (
-                    $perm->action == $action &&
-                    $perm->object == $entity &&
-                    in_array($perm->subject, $roles)
+                    $perm->signature == $signature &&
+                    in_array($perm->role, $roles)
                 );
             }
         );

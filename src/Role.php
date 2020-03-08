@@ -16,16 +16,6 @@ class Role extends Model
     protected $fillable = ['name', 'slug', 'description'];
 
     /**
-     * Role belongs to many permissions.
-     *
-     * @return BelongsToMany
-     */
-    public function permissions()
-    {
-        return $this->belongsToMany(Permission::class);//->withTimestamps();
-    }
-
-    /**
      * Role belongs to many users.
      *
      * @return BelongsToMany
