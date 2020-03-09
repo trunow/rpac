@@ -18,7 +18,7 @@ class CreatePermissionsTable extends Migration
             $table->string('role');
             $table->timestamps();
 
-            $table->unique(['entity', 'role', 'action']);
+            $table->unique(['signature', 'role']);
         });
     }
 
