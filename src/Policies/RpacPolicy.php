@@ -98,7 +98,7 @@ abstract class RpacPolicy
      * @param Model|null $model
      * @return bool|null
      */
-    protected function _getPermission($action, ?User $user, Model $model = null)
+    protected function getPermissions($action, ?User $user, Model $model = null)
     {
         $default = null;
         $roles = $this->getRoles($user, $model);
@@ -319,11 +319,11 @@ abstract class RpacPolicy
      */
     protected function authorize($action, ?User $user, Model $model = null)
     {
-        $default = $this->_getPermission($action, $user, $model);
+        $default = $this->getPermissions($action, $user, $model);
 
         if (is_null($default)) {
             // There is no default rule
-            $permissions = $this->getPermissions(
+            $permissions = $this->readPermissions(
                 $this->getSignature($action),
                 $this->getRoles($user, $model)
             );
@@ -362,9 +362,9 @@ abstract class RpacPolicy
      * Return permissions for signatures and roles
      * @param string $signature
      * @param array|string $roles
-     * @return Collection|Permission[]|Collection
+     * @return Collection|Permission[]
      */
-    protected function getPermissions($signature, $roles)
+    protected function readPermissions($signature, $roles)
     {
         // Take permissions with signature and user role
         $permissions = Permission::cached()->filter(
