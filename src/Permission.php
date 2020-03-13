@@ -20,6 +20,8 @@ class Permission extends Model
      */
     public static function cached()
     {
+        //TODO Sometimes there is a suck!
+        return Permission::all();
         return Cache::rememberForever(__CLASS__.'\\Cache', function() {
             return Permission::all();
         });
@@ -30,6 +32,9 @@ class Permission extends Model
         parent::boot();
 
         static::saved(function(Permission $model) {
+            Cache::forever(__CLASS__.'\\Cache', Permission::all());
+        });
+        static::deleted(function(Permission $model) {
             Cache::forever(__CLASS__.'\\Cache', Permission::all());
         });
     }

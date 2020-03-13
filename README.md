@@ -59,16 +59,14 @@ And also run migrations.
 
 > This uses the default users table which is in Laravel. You should already have the migration file for the users table available and migrated.
 
-### Rpacable Trait and $with = [roles]
+### Roles Trait and $with = [roles]
 
-Include `Rpacable` trait inside your `User` model.
+Include `Roles` trait inside your `User` model.
 
 ```php
-use Trunow\Rpac\Traits\Rpacable;
-
 class User extends Model implements AuthenticatableContract
 {
-    use Authenticatable, Rpacable;
+    use Authenticatable, Roles;
 ```
 
 And set protected property $with = ['roles'] (for autoloading roles with User's model).
@@ -92,21 +90,42 @@ Run command, example `rpac su:1` or `rpac admin:email@example.com` or `role:user
 
 ### Creating Policy
 
-Create empty policy class extends `RpPolicy` for your model.
+Create policy class extends `RpacPolicy` for your model.
 
 ```php
 namespace App\Policies;
 
-use Trunow\Rpac\Policies\RpPolicy;
+use Trunow\Rpac\Policies\RpacPolicy;
 
-class PostPolicy extends RpPolicy
+class PostPolicy extends RpacPolicy
 {
-    //...
+    protected function model()
+    {
+        return App\Post::class;
+    }
 }
 ```
 
-TODO
+You may define default rules.
 
+```php
+class PostPolicy extends RpacPolicy
+{
+    protected function model()
+    {
+        return App\Post::class;
+    }
+    public function getDefault($action, $role)
+    {
+        // Admin has full access
+        if ($role == 'Role\Admin') {
+            return true;
+        }
+        // Other rules are not defined and may be set in administrative interface.
+        return null;
+    }
+}
+```
 
 
 

@@ -6,6 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User;
 
+/**
+ * Class Role
+ * @package Trunow\Rpac
+ * 
+ * @property string $name
+ * @property string $slug
+ * @property string $description
+ */
 class Role extends Model
 {
     /**

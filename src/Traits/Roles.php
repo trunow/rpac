@@ -49,7 +49,7 @@ trait Roles
     {
         parent::boot();
 
-        static::saving(function (Roles $user) {
+        static::saving(function (User $user) {
             if (!$user->api_token) $user->api_token = Str::random(60);
         });
     }
